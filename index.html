@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fire Extinguisher Inspection Form</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      padding: 20px;
+      background-color: #f2f2f2;
+    }
+    .form-container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-group label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+    #signature-pad {
+      border: 1px solid #ccc;
+      width: 100%;
+      height: 200px;
+      cursor: crosshair;
+      background: #fff;
+    }
+    button {
+      padding: 10px 15px;
+      background-color: #007BFF;
+      color: #fff;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #success-message {
+      display: none;
+      text-align: center;
+      font-size: 1.2em;
+      color: green;
+      margin-top: 50px;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container" id="form-container">
+    <h1>Fire Extinguisher Inspection Form</h1>
+    <form id="inspectionForm">
+      <!-- Auto-populated Inspection Date -->
+      <div class="form-group">
+        <label for="inspectionDate">Inspection Date</label>
+        <input type="text" id="inspectionDate" name="inspectionDate" readonly>
+      </div>
+      <!-- Location Field -->
+      <div class="form-group">
+        <label for="location">Location</label>
+        <input type="text" id="location" name="location" placeholder="Enter location" required>
+      </div>
+      <!-- Serial Number -->
+      <div class="form-group">
+        <label for="serialNumber">Serial Number</label>
+       
+      <div class="form-group">
+        <label for="feType">FE Type</label>
+        
+        <select id="feType" name="feType" required>
+          <option value="">Select fetype</option>
+          <option value="Class A fire extinguisher – water, water mist, foam, dry powder, wet chemical.">Class A fire extinguisher – water, water mist, foam, dry powder, wet chemical.</option>
+          <option value="Class B fire extinguisher – water mist, foam, dry powder, CO2, some wet chemical.">Class B fire extinguisher – water mist, foam, dry powder, CO2, some wet chemical.</option>
+          <option value="Class C fire extinguisher – water mist, dry powder.">Class C fire extinguisher – water mist, dry powder.</option>
+          <option value="Class ABC">Class ABC</option>
+        
+         
+        </select>
+      </div>
+      <!-- Expired Month (Drop-down) -->
+      <div class="form-group">
+        <label for="expiredMonth">Expired Month</label>
+        <select id="expiredMonth" name="expiredMonth" required>
+          <option value="">Select Month</option>
+          <option value="1">January</option>
+          <option value="2">February</option>
+          <option value="3">March</option>
+          <option value="4">April</option>
+          <option value="5">May</option>
+          <option value="6">June</option>
+          <option value="7">July</option>
+          <option value="8">August</option>
+          <option value="9">September</option>
+          <option value="10">October</option>
+          <option value="11">November</option>
+          <option value="12">December</option>
+        </select>
+      </div>
+      <!-- Expired Year (Drop-down) -->
+      <div class="form-group">
+        <label for="expiredYear">Expired Year</label>
+        <select id="expiredYear" name="expiredYear" required>
+          <option value="">Select Year</option>
+          <option value="2025">2025</option>
+          <option value="2026">2026</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="kg">KiloGram</label>
+        <select id="kg" name="kg" required>
+          <option value="">Select kg</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+        </select>
+      </div>
+      <!-- Remark -->
+      <div class="form-group">
+        <label for="remark">Remark (if any)</label>
+        <textarea id="remark" name="remark" placeholder="Enter any remarks"></textarea>
+      </div>
+      <!-- Inspector Name -->
+      <div class="form-group">
+        <label for="inspectorName">Inspector Name</label>
+        <input type="text" id="inspectorName" name="inspectorName" placeholder="Enter inspector name" required>
+      </div>
+      <!-- Inspector Signature (Interactive Canvas) -->
+      <div class="form-group">
+        <label>Inspector Signature</label>
+        <canvas id="signature-pad"></canvas>
+        <button type="button" id="clearSignature" style="margin-top: 5px;">Clear Signature</button>
+      </div>
+      <!-- Submit Button -->
+      <div class="form-group">
+        <button type="submit">Submit Inspection</button>
+      </div>
+    </form>
+  </div>
+  <div id="success-message">Successfully Submitted!</div>
+
+  <script>
+    // Auto-populate the Inspection Date with today's date (YYYY-MM-DD)
+    document.addEventListener("DOMContentLoaded", function() {
+      const today = new Date();
+      const formattedDate = today.toISOString().split('T')[0];
+      document.getElementById('inspectionDate').value = formattedDate;
+    });
+
+    // ----- Signature Pad Functionality -----
+    const canvas = document.getElementById('signature-pad');
+    const ctx = canvas.getContext('2d');
+    let drawing = false;
+    let lastPos = { x: 0, y: 0 };
+
+    // Resize canvas to match its displayed size
+    function resizeCanvas() {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function getMousePos(canvas, evt) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: evt.clientX - rect.left,
+        y: evt.clientY - rect.top
+      };
+    }
+
+    canvas.addEventListener('mousedown', (e) => {
+      drawing = true;
+      lastPos = getMousePos(canvas, e);
+    });
+    canvas.addEventListener('mousemove', (e) => {
+      if (!drawing) return;
+      const mousePos = getMousePos(canvas, e);
+      ctx.beginPath();
+      ctx.moveTo(lastPos.x, lastPos.y);
+      ctx.lineTo(mousePos.x, mousePos.y);
+      ctx.strokeStyle = "#000";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      lastPos = mousePos;
+    });
+    canvas.addEventListener('mouseup', () => drawing = false);
+    canvas.addEventListener('mouseleave', () => drawing = false);
+
+    // Touch events for mobile devices
+    canvas.addEventListener("touchstart", function (e) {
+      e.preventDefault();
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        const mouseEvent = new MouseEvent("mousedown", {
+          clientX: touch.clientX,
+          clientY: touch.clientY
+        });
+        canvas.dispatchEvent(mouseEvent);
+      }
+    });
+    canvas.addEventListener("touchmove", function (e) {
+      e.preventDefault();
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        const mouseEvent = new MouseEvent("mousemove", {
+          clientX: touch.clientX,
+          clientY: touch.clientY
+        });
+        canvas.dispatchEvent(mouseEvent);
+      }
+    });
+    canvas.addEventListener("touchend", function (e) {
+      e.preventDefault();
+      const mouseEvent = new MouseEvent("mouseup", {});
+      canvas.dispatchEvent(mouseEvent);
+    });
+
+    // Clear signature
+    document.getElementById('clearSignature').addEventListener('click', () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
+
+    // ----- Form Submission -----
+    document.getElementById('inspectionForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      // Get the signature as a data URL
+      const signatureDataURL = canvas.toDataURL();
+
+      // Create a FormData object from the form elements
+      const formData = new FormData(this);
+      formData.append('signature', signatureDataURL);
+
+      // Post the form data to your Google Apps Script URL
+      fetch('https://script.google.com/macros/s/AKfycbyJGGfksAzktOMzNIIAIDH2fwrY81Rn9AYPXi_f-scBWiHms5iEBsgy0M2Hn49wk9h1/exec', {  // Replace with your Google Apps Script web app URL
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.text())
+      .then(result => {
+        // Hide the form and display the success message
+        document.getElementById('form-container').style.display = 'none';
+        document.getElementById('success-message').style.display = 'block';
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('There was an error submitting the form.');
+      });
+    });
+  </script>
+  <script src="script.js" defer></script>
+</body>
+</html>
